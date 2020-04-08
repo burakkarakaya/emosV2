@@ -548,6 +548,7 @@ var utils = {
     örnek html:
 
     <div data-product-id="51">
+        <div class="select-size"><input value="258996633" /></div>
         <div class="input-number"><input value="10" /></div>
         <button class="add-to-cart-btn"><i class="fa fa-shopping-cart"></i> <span>add to cart</span></button>
     </div>
@@ -563,7 +564,8 @@ var shopping = {
     cls: {
         activeted: 'activeted',
         cartEmpty: 'cart-empty',
-        cartFull: 'cartFull'
+        cartFull: 'cart-full',
+        cartLoading: 'ajx-mini-cart-loading'
     },
 
     temp: {
@@ -610,7 +612,10 @@ var shopping = {
             target.innerHTML = _t.temp['total'].replace(/{{total}}/g, (totals[0] || {}).PriceWithTax || '0');
     },
     getMiniCart: function () {
-        var _t = this;
+        var _t = this,
+            bdy = document.body;
+
+        bdy.classList.add(_t.cls['cartLoading']);
         utils.ajx({ uri: utils.getURL({ key: 'getCart' }) }, function (res) {
             var type = res['type'] || '',
                 data = res['data'] || {},
@@ -623,6 +628,8 @@ var shopping = {
                 dispatcher({ type: DISPATCHER_TYPES.MINI_CART_LOADED, params: { data: data } });
             } else
                 console.error('getCart', message);
+
+            bdy.classList.remove(_t.cls['cartLoading']);
         });
     },
 
@@ -641,10 +648,13 @@ var shopping = {
 
         // cart status
         var bdy = document.body;
-        if( count == 0 )
-            bdy.classList.add(_t.cls['cartEmpty']).remove(_t.cls['cartFull']);
-        else
-            bdy.classList.add(_t.cls['cartFull']).remove(_t.cls['cartEmpty']);
+        if (count == 0){
+            bdy.classList.add(_t.cls['cartEmpty']);
+            bdy.classList.remove(_t.cls['cartFull']);
+        }else{
+            bdy.classList.add(_t.cls['cartFull']);
+            bdy.classList.remove(_t.cls['cartEmpty']);
+        }
     },
     getCartItemCount: function () {
         var _t = this;
@@ -780,21 +790,6 @@ var shopping = {
 
         // add, remove cart
         _t.attachEvent({ btn: document.querySelectorAll(elements.button__addToCart), type: 'addToCart' });
-
-
-        // open cart
-        /*
-        var target = document.querySelector(elements.button__openCart);
-        if (utils.detectEl(target))
-            target.addEventListener('click', (evt) => {
-                var ths = evt.currentTarget;
-                if (!ths.classList.contains(_t.cls['activeted'])) {
-                    ths.classList.add(_t.cls.activeted);
-                    console.log('istek');
-                } else
-                    ths.classList.remove(_t.cls.activeted);
-            });
-        */
     },
 
     check: function () {
@@ -830,25 +825,6 @@ var shopping = {
 };
 
 shopping.init();
-
-
-/*
-document.addEventListener('click', (event) => {
-    const target = event.target,
-        classList = target.classList || '';
-
-    switch (true) {
-        case utils.containsClass({ classList: classList, value: elements.button__addToCart }):
-            shopping.addToCart(target);
-            break;
-        case utils.containsClass({ classList: classList, value: elements.button__removeFromCart }):
-            shopping.removeFromCart(target);
-            break;
-        default:
-            break;
-    }
-}, true);
-*/
 /* 
     FE KODLARI BURAYA
 */
