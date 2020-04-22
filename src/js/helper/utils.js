@@ -246,9 +246,10 @@ var utils = {
         };
     },
 
-    containsClass: function (o) {
+    hasClass: function (o) {
         o = o || {};
-        var classList = o['classList'] || '', // classList
+        var elm = o['element'] || {},
+            classList = elm.classList || '', // classList
             value = (o['value'] || '').replace(/\./g, ''); // içerisinde bakılacak class
 
         return classList.contains(value) || false;
@@ -365,7 +366,105 @@ var utils = {
 
         return extended;
 
-    }
+    },
+
+    forEach: function (array, callback, scope) {
+        https://css-tricks.com/snippets/javascript/loop-queryselectorall-matches/
+        for (var i = 0; i < array.length; i++) {
+            callback.call(scope, i, array[i]); // passes back stuff we need
+        }
+    },
+
+    wrap: function (o) {
+        o = o || {};
+        var target = o['target'] || '',
+            wrapper = o['wrapper'] || '';
+        target.parentNode.insertBefore(wrapper, target);
+        wrapper.appendChild(target);
+    },
+
+    getCreateElement: function (o) {
+        o = o || {};
+        var node = document.createElement(o['elm'] || '');
+        node.className = o['cls'] || '';
+
+        return node;
+    },
+
+    cssClass: function (o, callback) {
+        var _t = this,
+            target = o['target'],
+            delay = o['delay'],
+            type = o['type'];
+
+        if (_t.detectEl(target)) {
+            if (type == 'add') {
+                var cls = o['cls'] || ['ready', 'animate'];
+                target.classList.add(cls[0]);
+                setTimeout(function () {
+                    target.classList.add(cls[1]);
+                    if (typeof callback !== 'undefined') callback();
+                }, delay);
+            } else {
+                cls = o['cls'] || ['animate', 'ready'];
+                target.classList.remove(cls[0]);
+                setTimeout(function () {
+                    target.classList.remove(cls[1]);
+                    if (typeof callback !== 'undefined') callback();
+                }, delay);
+            }
+        }
+    },
+
+    getElementOffset: function (el) {
+        /* https://muffinman.io/javascript-get-element-offset/ */
+        let top = 0;
+        let left = 0;
+        let element = el;
+
+        // Loop through the DOM tree
+        // and add it's parent's offset to get page offset
+        do {
+            top += element.offsetTop || 0;
+            left += element.offsetLeft || 0;
+            element = element.offsetParent;
+        } while (element);
+
+        return {
+            top,
+            left,
+        };
+    },
+
+    detectPosition: function (o) {
+        o = o || {};
+        
+        var _t = this,
+            target = o['target'] || '',
+            targetBounding = target.getBoundingClientRect() || {},
+            rate = o['rate'] || 1,
+            threshold = parseFloat( o['threshold'] || '0' ),
+            wst = scrollTop = document.body.scrollTop || document.documentElement.scrollTop || 0,
+            ht = window.innerHeight,
+            wt = window.innerWidth,
+            _min = ht,
+            o1 = { x: 0, y: wst, width: wt, height: (ht * rate) || _min },
+            o2 = { x: 0, y: _t.getElementOffset(target).top + threshold, width: targetBounding.width, height: (targetBounding.height * rate) || _min },
+            b = false;
+        if (o1.x < o2.x + o2.width && o1.x + o1.width > o2.x && o1.y < o2.y + o2.height && o1.y + o1.height > o2.y)
+            b = true;
+
+        /* 
+            özel durumlarda elementi geçtikten sonra tetiklenmesi için
+            örneğin ürün liste loadmore
+        */
+        if (o['elementNext']) {
+            if (o1.y >= o2.y + o2.height)
+                b = true;
+        }
+
+        return b;
+    },
 
 
 };

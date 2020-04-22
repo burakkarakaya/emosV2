@@ -103,10 +103,10 @@ var shopping = {
 
         // cart status
         var bdy = document.body;
-        if (count == 0){
+        if (count == 0) {
             bdy.classList.add(_t.cls['cartEmpty']);
             bdy.classList.remove(_t.cls['cartFull']);
-        }else{
+        } else {
             bdy.classList.add(_t.cls['cartFull']);
             bdy.classList.remove(_t.cls['cartEmpty']);
         }
@@ -136,11 +136,12 @@ var shopping = {
 
             var prts = utils.getParents(target.parentNode, '[data-product-id]'),
                 id = prts.getAttribute('data-product-id') || '',
+                stockBarcodeId = prts.getAttribute('data-stock-barcode-id') || '',
                 quantity = (prts.querySelector(elements.cart__Quantity) || {}).value || 1;
 
             if (id != '') {
                 dispatcher({ type: DISPATCHER_TYPES.ADDING_TO_CART, params: { target: target } });
-                utils.ajx({ uri: utils.getURL({ key: 'addToCart' }), data: { ProductId: id, Quantity: quantity } }, function (res) {
+                utils.ajx({ uri: utils.getURL({ key: 'addToCart' }), data: { ProductId: id, Quantity: quantity, StockBarcodeId: stockBarcodeId  } }, function (res) {
 
                     var type = res['type'] || '',
                         data = res['data'] || {},
@@ -217,7 +218,7 @@ var shopping = {
     },
 
 
-    // sepet ekleme çıkarma buton eventları burada tanımlanır
+    // sepet ekleme çikarma buton eventlari burada tanimlanir
     attachEvent: function (o) {
         o = o || {};
         var _t = this,
@@ -250,7 +251,7 @@ var shopping = {
     check: function () {
         var _t = this;
 
-        // ilk açılışta getCart istek atmak
+        // ilk açilista getCart istek atmak
         var k = utils.sessionStorage({ type: 'get', key: _t.keys['cartItem'] }) || '';
         if (k == '')
             _t.getMiniCart();
@@ -262,7 +263,7 @@ var shopping = {
                 _t.getMiniCart();
         }
 
-        // ilk açılışta sepet adedi kontrolu varsa istek atmıyacağız
+        // ilk açilista sepet adedi kontrolu varsa istek atmiyacagiz
         k = utils.sessionStorage({ type: 'get', key: _t.keys['cartItemCount'] }) || '';
         if (k == '')
             _t.getCartItemCount();
