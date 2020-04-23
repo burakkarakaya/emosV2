@@ -23,64 +23,25 @@ var shopping = {
         cartLoading: 'ajx-mini-cart-loading'
     },
 
-    temp: {
-
-        cartItem: `
-            <div class="product-widget" data-document-id="{{documentId}}">
-                <div class="product-img">
-                    <img src="{{src}}" alt="">
-                </div>
-                <div class="product-body">
-                    <h3 class="product-name"><a href="#">{{productName}}</a></h3>
-                    <h4 class="product-price"><span class="qty">{{qty}}</span>{{price}}</h4>
-                </div>
-                <button onclick="shopping.removeFromCart(this);" class="delete"><i class="fa fa-close"></i></button>
-            </div>
-        `,
-
-        cartEmpty: '<div>Your Cart is Empty</div>',
-
-        totalItemCountInCart: '{{count}} item(s) selected',
-
-        total: 'SUBTOTAL: {{total}}'
-
+    setCartTemplate: function (htm) {
+        var _t = this;
+        document.querySelectorAll('.ems-cart.modal')[0].innerHTML = htm || '';
     },
 
-    // minicart
-    setCartTemplate: function (data) {
-        var _t = this,
-            items = data['Items'] || [],
-            totals = data['Totals'] || [],
-            itemHtm = items.length > 0 ? items.map(function (item, index) {
-                return _t.temp['cartItem'].replace(/{{documentId}}/g, item.DocumentId || '').replace(/{{src}}/g, item.Product.DefaultImageDocument.ThumbnailUrl || '').replace(/{{productName}}/g, item.Product.Name || '').replace(/{{qty}}/g, item.Quantity || '').replace(/{{price}}/g, item.SalesPriceWithTax || '');
-            }).join('') : (_t.temp['cartEmpty'] || '');
-
-
-        // cart list item add
-        var target = document.querySelector(elements.cartContainer);
-        if (utils.detectEl(target))
-            target.innerHTML = itemHtm || '';
-
-        // total    
-        target = document.querySelector(elements.total);
-        if (utils.detectEl(target))
-            target.innerHTML = _t.temp['total'].replace(/{{total}}/g, (totals[0] || {}).PriceWithTax || '0');
-    },
     getMiniCart: function () {
         var _t = this,
             bdy = document.body;
 
         bdy.classList.add(_t.cls['cartLoading']);
-        utils.ajx({ uri: utils.getURL({ key: 'getCart' }) }, function (res) {
+        utils.ajx({ uri: utils.getURL({ key: 'getCart' }), type: 'html' }, function (res) {
             var type = res['type'] || '',
                 data = res['data'] || {},
                 message = res['message'] || '';
 
             if (type == 'success') {
-                var d = data.Cart || {};
-                _t.setCartTemplate(d);
-                utils.sessionStorage({ type: 'set', key: _t.keys['cartItem'], value: JSON.stringify(d) });
-                dispatcher({ type: DISPATCHER_TYPES.MINI_CART_LOADED, params: { data: data } });
+                _t.setCartTemplate(data);
+                utils.sessionStorage({ type: 'set', key: _t.keys['cartItem'], value: escape(data) });
+                dispatcher({ type: DISPATCHER_TYPES.MINI_CART_LOADED, params: { html: data, doc: res['doc'] || '' } });
             } else
                 console.error('getCart', message);
 
@@ -95,11 +56,6 @@ var shopping = {
             target = document.querySelector(elements.cartItemCount);
         if (utils.detectEl(target))
             target.innerHTML = count;
-
-        // total item count
-        target = document.querySelector(elements.totalItemCount);
-        if (utils.detectEl(target))
-            target.innerHTML = _t.temp['totalItemCountInCart'].replace(/{{count}}/g, count);
 
         // cart status
         var bdy = document.body;
@@ -121,7 +77,7 @@ var shopping = {
                 var count = data.Count || 0;
 
                 _t.setCartItemCount(count);
-                utils.sessionStorage({ type: 'set', key: _t.keys['cartItemCount'], value: count });
+                utils.sessionStorage({ type: 'set', key: _t.keys['cartItemCount'], value: count.toString() });
                 dispatcher({ type: DISPATCHER_TYPES.CART_ITEM_COUNT, params: { value: count } });
             } else
                 console.error('getCartItemCount', message);
@@ -139,9 +95,17 @@ var shopping = {
                 stockBarcodeId = prts.getAttribute('data-stock-barcode-id') || '',
                 quantity = (prts.querySelector(elements.cart__Quantity) || {}).value || 1;
 
+
+            if( stockBarcodeId == '' ){
+                utils.alert({ message: translation['addToCartSizeSelectionError'] || '' });
+                dispatcher({ type: DISPATCHER_TYPES.ADD_TO_CART_SIZE_SELECTION_ERROR, params: { target: target } });
+                target.classList.remove(_t.cls.activeted);
+                return false;
+            }    
+
             if (id != '') {
                 dispatcher({ type: DISPATCHER_TYPES.ADDING_TO_CART, params: { target: target } });
-                utils.ajx({ uri: utils.getURL({ key: 'addToCart' }), data: { ProductId: id, Quantity: quantity, StockBarcodeId: stockBarcodeId  } }, function (res) {
+                utils.ajx({ uri: utils.getURL({ key: 'addToCart' }), data: { ProductId: id, Quantity: quantity, StockBarcodeId: stockBarcodeId } }, function (res) {
 
                     var type = res['type'] || '',
                         data = res['data'] || {},
@@ -256,11 +220,12 @@ var shopping = {
         if (k == '')
             _t.getMiniCart();
         else {
-            if (utils.IsValidJSONString(k)) {
-                k = JSON.parse(k);
+            try {
+                k = unescape(k);
                 _t.setCartTemplate(k);
-            } else
+            } catch (error) {
                 _t.getMiniCart();
+            }
         }
 
         // ilk açilista sepet adedi kontrolu varsa istek atmiyacagiz

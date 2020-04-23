@@ -1,4 +1,4 @@
-// dil bazlı global config buraya en ve tr için ayrı ayrı yonetilmeli
+// dil bazli global config buraya en ve tr için ayri ayri yonetilmeli
 var config = {
-    culture: 'en'
+    culture: 'tr'
 };

@@ -13,7 +13,7 @@ var elements = {
     total: '.cart-summary > h5',
     totalItemCount: '.cart-summary > small',
     cartContainer: '.cart-list', 
-    cartItemCount: '.shopping-cart > .qty',
+    cartItemCount: '.shopping-cart-qty',
     cart__Quantity: '.input-number input',
     button__addToCart: '.add-to-cart-btn',
     button__openCart: '.shopping-cart',

@@ -1,4 +1,4 @@
-// genel sistemde kullanabileceğimiz fonk. buraya tanımlanır
+// genel sistemde kullanabilecegimiz fonk. buraya tanimlanir
 
 var utils = {
 
@@ -9,7 +9,7 @@ var utils = {
         if (typeof URLs !== 'undefined')
             return (URLs[key] || '').replace(/{{culture}}/g, (config || {})['culture'] || 'en');
         else {
-            console.error('URLs değişkenini import ediniz');
+            console.error('URLs degiskenini import ediniz');
             return '';
         }
     },
@@ -18,6 +18,7 @@ var utils = {
 
         o = o || {};
         var uri = o['uri'] || '',
+            type = o['type'] || 'json', // json ve html degerlerini alir. default degeri json
             method = o['method'] || 'POST',
             headers = o['headers'] || { 'Content-Type': 'application/json' },
             data = o['data'] || {},
@@ -31,29 +32,56 @@ var utils = {
             return false;
         }
 
-        return fetch(uri, {
-            method: method,
-            headers: headers,
-            body: JSON.stringify(data)
-        })
-            .then(res => res.json())
-            .then(res => {
-                if (res.IsSuccess)
-                    _callback({ type: 'success', data: res });
-                else
-                    _callback({ type: 'error', message: res.Message });
 
-            })
-            .catch(error => {
-                _callback({ type: 'error', message: error });
-            });
+        switch (type) {
+            
+            case 'json':
+                return fetch(uri, {
+                    method: method,
+                    headers: headers,
+                    body: JSON.stringify(data)
+                })
+                    .then(res => res.json())
+                    .then(res => {
+                        if (res.IsSuccess)
+                            _callback({ type: 'success', data: res });
+                        else
+                            _callback({ type: 'error', message: res.Message });
+
+                    })
+                    .catch(error => {
+                        _callback({ type: 'error', message: error });
+                    });
+
+            case 'html':
+                return fetch(uri)
+                    .then(res => res.text())
+                    .then(function (html) {
+                        try {
+                            var parser = new DOMParser();
+                            var doc = parser.parseFromString(html, 'text/html');
+
+                            _callback({ type: 'success', data: html, doc: doc });
+
+                        } catch (error) {
+                            _callback({ type: 'error', message: error.message });
+                        }
+
+
+                    }).catch(function (error) {
+                        _callback({ type: 'error', message: error });
+                    });
+
+            default:
+                break;
+        }
     },
 
     regex: {
-        typ1: /[^a-zA-ZıiIğüşöçİĞÜŞÖÇ\s]+/g /* sadece harf */,
+        typ1: /[^a-zA-ZiiIgüsöçIGÜSÖÇ\s]+/g /* sadece harf */,
         typ2: /[^0-9\s]+/g /* sadece rakam */,
-        typ3: /[^a-zA-ZıiI0-9ğüşöçİĞÜŞÖÇ\s]+/g /* harf rakam karışık */,
-        typ4: /[^a-zA-ZıiI0-9ğüşöçİĞÜŞÖÇ:\/\s]+/g /* address alanı için */,
+        typ3: /[^a-zA-ZiiI0-9güsöçIGÜSÖÇ\s]+/g /* harf rakam karisik */,
+        typ4: /[^a-zA-ZiiI0-9güsöçIGÜSÖÇ:\/\s]+/g /* address alani için */,
         typ5: /[^0-9\(\)\s]+/g /* telefon için */
     },
 
@@ -86,7 +114,7 @@ var utils = {
 
     toUpperCase: function (k) {
         k = k || '';
-        var letters = { 'i': 'İ', 'ş': 'Ş', 'ğ': 'Ğ', 'ü': 'Ü', 'ö': 'Ö', 'ç': 'Ç', 'ı': 'I' },
+        var letters = { 'i': 'I', 's': 'S', 'g': 'G', 'ü': 'Ü', 'ö': 'Ö', 'ç': 'Ç', 'i': 'I' },
             n = '';
         for (var i = 0; i < k.length; ++i) {
             var j = k[i];
@@ -97,7 +125,7 @@ var utils = {
 
     toLowerCase: function (k) {
         k = k || '';
-        var letters = { 'İ': 'i', 'I': 'ı', 'Ş': 'ş', 'Ğ': 'ğ', 'Ü': 'ü', 'Ö': 'ö', 'Ç': 'ç' },
+        var letters = { 'I': 'i', 'I': 'i', 'S': 's', 'G': 'g', 'Ü': 'ü', 'Ö': 'ö', 'Ç': 'ç' },
             n = '';
         for (var i = 0; i < k.length; ++i) {
             var j = k[i];
@@ -134,7 +162,7 @@ var utils = {
 
     confirm: function (o, callback) {
         o = o || {};
-        var title = o['title'] || 'Uyarı',
+        var title = o['title'] || 'Uyari',
             message = o['message'] || '',
             _callback = function (res) {
                 if (typeof callback !== 'undefined')
@@ -145,7 +173,7 @@ var utils = {
 
     alert: function (o, callback) {
         o = o || {};
-        var title = o['title'] || 'Uyarı',
+        var title = o['title'] || 'Uyari',
             message = o['message'] || '',
             _callback = function (res) {
                 if (typeof callback !== 'undefined')
@@ -250,7 +278,7 @@ var utils = {
         o = o || {};
         var elm = o['element'] || {},
             classList = elm.classList || '', // classList
-            value = (o['value'] || '').replace(/\./g, ''); // içerisinde bakılacak class
+            value = (o['value'] || '').replace(/\./g, ''); // içerisinde bakilacak class
 
         return classList.contains(value) || false;
     },
@@ -438,13 +466,13 @@ var utils = {
 
     detectPosition: function (o) {
         o = o || {};
-        
+
         var _t = this,
             target = o['target'] || '',
             targetBounding = target.getBoundingClientRect() || {},
             rate = o['rate'] || 1,
-            threshold = parseFloat( o['threshold'] || '0' ),
-            wst = scrollTop = document.body.scrollTop || document.documentElement.scrollTop || 0,
+            threshold = parseFloat(o['threshold'] || '0'),
+            wst = document.body.scrollTop || document.documentElement.scrollTop || 0,
             ht = window.innerHeight,
             wt = window.innerWidth,
             _min = ht,
@@ -456,7 +484,7 @@ var utils = {
 
         /* 
             özel durumlarda elementi geçtikten sonra tetiklenmesi için
-            örneğin ürün liste loadmore
+            örnegin ürün liste loadmore
         */
         if (o['elementNext']) {
             if (o1.y >= o2.y + o2.height)
@@ -465,6 +493,25 @@ var utils = {
 
         return b;
     },
+
+    getMousePos: function (e) {
+        var posx = 0;
+        var posy = 0;
+        if (!e) e = window.event;
+
+        if (e.pageX || e.pageY) {
+            posx = e.pageX;
+            posy = e.pageY;
+        } else if (e.clientX || e.clientY) {
+            posx = e.clientX + body.scrollLeft + document.documentElement.scrollLeft;
+            posy = e.clientY + body.scrollTop + document.documentElement.scrollTop;
+        }
+
+        return {
+            x: posx,
+            y: posy
+        };
+    }
 
 
 };
