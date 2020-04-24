@@ -3,7 +3,8 @@ var contentAjx = {
     el: {
         target: '.site-main',
         targetTitle: 'title',
-        btn: '.ems-paging ul li a, .sidebar a, .order a, .menu-category-holder a'
+        targetDesc: 'meta[name="description"]',
+        btn: '.ems-paging ul li a, .filter-tree a, .menu-category-holder a'
     },
     cls: {
         loading: 'ajx-loading'
@@ -25,32 +26,48 @@ var contentAjx = {
         }
 
     },
+    ckeckURI: function (uri) {
+        var _t = this,
+            layout = 'layout=false';
+
+        if (uri.indexOf(layout) == -1) {
+            if (uri.indexOf('?') != -1)
+                uri = uri + '&' + layout;
+            else
+                uri = uri + '?' + layout;
+        }
+
+        return uri;
+    },
     ajx: function (uri) {
         var _t = this;
         _t.clickable = false;
         _t.loading({ type: 'add' });
-        utils.ajx({ uri: uri, type: 'html' }, function (res) {
+        utils.ajx({ uri: _t.ckeckURI(uri), type: 'html' }, function (res) {
 
             if (res.type == 'success') {
 
-                var doc = res.doc,
-                    targetTitle = document.querySelector(_t.el.targetTitle), // mevcut sayfanın hedef içeriği
-                    ajxTargetTitle = doc.querySelector(_t.el.targetTitle) || {}, // ajx ile yüklenen sayfanın title bilgisi alınır
-                    title = ajxTargetTitle.innerHTML || '',
-                    targetContent = document.querySelector(_t.el.target), // mevcut sayfanın title
-                    ajxTargetContent = doc.querySelector(_t.el.target) || {};  // ajx ile yüklenen sayfanın hedef gosterilen içeriği alınır
+                var target = document.querySelector(_t.el.target), // mevcut sayfanin hedef içerigi 
+                    targetTitle = document.querySelector(_t.el.targetTitle), // mevcut sayfanin title
+                    targetDesc = document.querySelector(_t.el.targetDesc), // mevcut sayfanin desc
+                    headers = res.headers || {},
+                    pageTitle = headers.get('page-title') || '',
+                    pageDesc = headers.get('page-description') || '';
 
-                if (utils.detectEl(targetContent))
-                    targetContent.innerHTML = ajxTargetContent.innerHTML || '';
+                if (utils.detectEl(target))
+                    target.innerHTML = res.data || '';
 
                 if (utils.detectEl(targetTitle))
-                    targetTitle.innerHTML = title;
+                    targetTitle.innerHTML = pageTitle;
 
-                history.pushState({ Url: uri, Page: title }, title, uri);
+                if (utils.detectEl(targetDesc))
+                    targetDesc.content = pageDesc;
+
+                history.pushState({ Url: uri, Page: pageTitle }, pageTitle, uri);
 
                 dispatcher({ type: DISPATCHER_TYPES.CONTENT_LOADED, params: { type: 'success', data: res } });
 
-            }else{
+            } else {
                 dispatcher({ type: DISPATCHER_TYPES.CONTENT_LOADED_ERROR, params: res });
             }
 
@@ -76,6 +93,12 @@ var contentAjx = {
             elm.removeEventListener('click', _t.onClick, true);
             elm.addEventListener('click', _t.onClick, true);
         });
+
+        window.onpopstate = function (event) {
+            setTimeout(function () {
+                _t.ajx(event.state ? event.state.Url : window.location.href);
+            }, 1);
+        };
     },
     init: function () {
         var _t = this,
