@@ -17,6 +17,7 @@ var shopping = {
     },
 
     cls: {
+        selected: 'selected',
         activeted: 'activeted',
         cartEmpty: 'cart-empty',
         cartFull: 'cart-full',
@@ -96,12 +97,12 @@ var shopping = {
                 quantity = (prts.querySelector(elements.cart__Quantity) || {}).value || 1;
 
 
-            if( stockBarcodeId == '' ){
+            if (stockBarcodeId == '') {
                 utils.alert({ message: translation['addToCartSizeSelectionError'] || '' });
                 dispatcher({ type: DISPATCHER_TYPES.ADD_TO_CART_SIZE_SELECTION_ERROR, params: { target: target } });
                 target.classList.remove(_t.cls.activeted);
                 return false;
-            }    
+            }
 
             if (id != '') {
                 dispatcher({ type: DISPATCHER_TYPES.ADDING_TO_CART, params: { target: target } });
@@ -116,7 +117,7 @@ var shopping = {
                         dispatcher({ type: DISPATCHER_TYPES.ADDED_TO_CART, params: { target: target } });
 
                         _t.getCartItemCount();
-                        _t.getMiniCart();
+                        //_t.getMiniCart();
 
                         setTimeout(() => {
                             target.classList.remove(_t.cls.activeted);
@@ -181,6 +182,21 @@ var shopping = {
         }
     },
 
+    // beden seçimi
+    setStockBarcode: function (stkId, el) {
+        var _t = this,
+            prts = utils.getParents(el, '[data-stock-barcode-id]'),
+            option1 = prts.querySelectorAll(elements.size_selection_option1);
+
+        if (utils.detectEl(prts))
+            prts.setAttribute('data-stock-barcode-id', stkId);
+
+        if (utils.detectEl(option1))
+            utils.setClass({ target: option1, cls: _t.cls['selected'], type: 'remove' });
+
+        el.classList.add(_t.cls['selected']);
+    },
+
 
     // sepet ekleme çikarma buton eventlari burada tanimlanir
     attachEvent: function (o) {
@@ -214,26 +230,11 @@ var shopping = {
 
     check: function () {
         var _t = this;
-
-        // ilk açilista getCart istek atmak
-        var k = utils.sessionStorage({ type: 'get', key: _t.keys['cartItem'] }) || '';
-        if (k == '')
-            _t.getMiniCart();
-        else {
-            try {
-                k = unescape(k);
-                _t.setCartTemplate(k);
-            } catch (error) {
+        _t.getCartItemCount();
+        document.querySelectorAll('.ems-cart-trigger')[0].addEventListener('click', function () {
+            if (!utils.hasClass({ element: document.body, value: 'ems-cart-animate' }))
                 _t.getMiniCart();
-            }
-        }
-
-        // ilk açilista sepet adedi kontrolu varsa istek atmiyacagiz
-        k = utils.sessionStorage({ type: 'get', key: _t.keys['cartItemCount'] }) || '';
-        if (k == '')
-            _t.getCartItemCount();
-        else
-            _t.setCartItemCount(k || 0);
+        });
     },
 
     init: function () {

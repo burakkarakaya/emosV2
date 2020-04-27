@@ -51,8 +51,8 @@ var contentAjx = {
                     targetTitle = document.querySelector(_t.el.targetTitle), // mevcut sayfanin title
                     targetDesc = document.querySelector(_t.el.targetDesc), // mevcut sayfanin desc
                     headers = res.headers || {},
-                    pageTitle = headers.get('page-title') || '',
-                    pageDesc = headers.get('page-description') || '';
+                    pageTitle = decodeURIComponent(escape( headers.get('page-title') || '' )),
+                    pageDesc = decodeURIComponent(escape( headers.get('page-description') || '' ));
 
                 if (utils.detectEl(target))
                     target.innerHTML = res.data || '';

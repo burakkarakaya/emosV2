@@ -34,7 +34,7 @@ var utils = {
 
 
         switch (type) {
-            
+
             case 'json':
                 return fetch(uri, {
                     method: method,
@@ -53,24 +53,28 @@ var utils = {
                         _callback({ type: 'error', message: error });
                     });
 
-            case 'html':
+            case 'html': {
+                var headers = {};
                 return fetch(uri)
-                    .then(res => res.text())
+                    .then(res => {
+                        headers = res.headers || {};
+                        return res.text();
+                    })
                     .then(function (html) {
                         try {
                             var parser = new DOMParser();
                             var doc = parser.parseFromString(html, 'text/html');
 
-                            _callback({ type: 'success', data: html, doc: doc });
+                            _callback({ type: 'success', data: html, doc: doc, headers: headers || {} });
 
                         } catch (error) {
                             _callback({ type: 'error', message: error.message });
                         }
 
-
                     }).catch(function (error) {
                         _callback({ type: 'error', message: error });
                     });
+            }
 
             default:
                 break;
@@ -511,6 +515,38 @@ var utils = {
             x: posx,
             y: posy
         };
+    },
+
+    responsiveControl: function () {
+        var _t = this,
+            responsive = config.responsive || '(max-width: 960px)',
+            b = false;
+        if (window.matchMedia(responsive).matches)
+            b = true;
+
+        return b;
+    },
+
+    setClass: function (o) {
+        /* 
+            addClass, removeClass için fonk.
+            utils.setClass({ target: btn, cls: _t.opt.selected, type: 'remove' });
+        */
+        o = o || {};
+        var _t = this,
+            target = o['target'],
+            cls = (o['cls'] || '').split(' '),
+            type = o['type'] || 'add'; // add, remove degerlerini alir 
+
+        _t.forEach(target, function (i, elm) {
+            _t.forEach(cls, function (j, k) {
+                if (type == 'add')
+                    elm.classList.add(k);
+                else
+                    elm.classList.remove(k);
+            });
+
+        });
     }
 
 

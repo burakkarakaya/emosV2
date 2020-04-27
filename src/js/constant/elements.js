@@ -17,5 +17,7 @@ var elements = {
     cart__Quantity: '.input-number input',
     button__addToCart: '.add-to-cart-btn',
     button__openCart: '.shopping-cart',
-    button__removeFromCart: '.delete' // Instead of dot you need to add className
+    button__removeFromCart: '.delete', // Instead of dot you need to add className
+    size_selection_option1: '.ems-prdd-option1-list li', // beden seçimi li
+    size_selection_option2: '.ems-prdd-option2-list li', // 2'li seçimlerdeki 2. beden seçimi
 };
